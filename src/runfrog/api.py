@@ -39,7 +39,7 @@ class ORJSONResponse(JSONResponse):
 
 
 description = """
-## 🐸 FROG webservice
+## FROG webservice
 
 This service provides an API for running FROG analysis.
 
@@ -228,7 +228,7 @@ _example_items: Dict[str, Example] = {
         description="iJR904 model from BiGG database as OMEX.",
     ),
 }
-examples = [example.dict() for example in _example_items.values()]
+examples = [example.model_dump() for example in _example_items.values()]
 
 
 @api.get("/api/examples", tags=["examples"])
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     # http://localhost:1555/docs
 
     uvicorn.run(
-        "fbc_curation.api:api",
+        "runfrog.api:api",
         host="localhost",
         port=1555,
         log_level="info",

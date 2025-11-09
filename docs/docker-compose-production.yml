@@ -25,8 +25,8 @@ services:
     environment:
       - API_BASE_URL=https://runfrog.de
     build:
-      context: runfrog-site
-      dockerfile: Dockerfile-production
+      context: ../runfrog-site
+      dockerfile: ../runfrog-site/Dockerfile-production
     command: tail -f /dev/null
     volumes:
       - ./runfrog-site:/app
@@ -36,7 +36,7 @@ services:
   backend:
     container_name: frog_backend
     restart: always
-    build: .
+    build: ..
     volumes:
       - .:/code
       - ./frog_data:/frog_data
@@ -54,7 +54,7 @@ services:
   worker:
     container_name: frog_worker
     restart: always
-    build: .
+    build: ..
     command: celery --app=src.fbc_curation.worker.celery worker --loglevel=info
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -74,7 +74,7 @@ services:
   flower:
     restart: always
     container_name: frog_flower
-    build: .
+    build: ..
     command: celery --app=src.fbc_curation.worker.celery --broker=redis://redis:6379/0 flower --port=5555 --url_prefix=flower
     expose:
       - 5555
