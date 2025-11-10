@@ -8,7 +8,9 @@ icons:
 https://fonts.google.com/icons
 
 """
-
+# Some fixes for native mode: github.com/zauberzeug/nicegui/issues/1841
+import multiprocessing
+multiprocessing.set_start_method("spawn", force=True)
 
 from nicegui import ui, events
 from pymetadata.console import console
@@ -40,44 +42,43 @@ def homepage():
         ui.button(icon='menu').props('flat color=white')
 
     with ui.row().classes('w-full'):
+        ui.html(
+            'Upload an <strong>SBML file</strong> or <strong>COMBINE archive</strong> (OMEX), or enter a URL.',
+            sanitize=False
+        )
+
         with ui.tabs().classes('w-full') as tabs:
             ui.tab('file', label='Upload File', icon='file_upload')
             ui.tab('url', label='Submit URL', icon='link')
 
         with ui.tab_panels(tabs, value='url').classes('w-full'):
             with ui.tab_panel('file'):
-                ui.html('Select an <strong>SBML</strong> file with FBC information located on your computer. <br />'
-                        'SBML file or SBML files in a COMBINE archive (OMEX) are supported.', sanitize=False)
-
                 ui.upload(
-                    on_upload=handle_upload,
+                    on_upload=handle_file_upload,
                     multiple=False,
                     max_files=1,
+                    auto_upload=True,
                 ).classes('w-full')
-                ui.button('Create FROG report', on_click=lambda: ui.notify('You clicked me!'))
 
             with ui.tab_panel('url'):
-                ui.html('Provide the URL of an <strong>SBML file</strong> or <strong>OMEX archive</strong> with FBC information.',
-                        sanitize=False)
-                # markdown = ui.markdown(content="""# Test
-                # This is markdown
-                #
-                # """)
-
                 url_input = ui.input(label='URL', placeholder='start typing',
                          # on_change=lambda e: result.set_text('you typed: ' + e.value),
                          validation={
                              'URL must be valid': lambda value: is_valid_url(value)
                          },
                          ).props('clearable').on('keydown.enter', lambda value: console.print(value)).classes('w-full')
-                ui.button('Create FROG report', on_click=lambda: ui.notify(f'You clicked me! Create report for {url_input.value}'))
 
-                ui.html('<h2>Examples</h2>', sanitize=False)
-                ui.html('<code>https://github.com/matthiaskoenig/fbc_curation/raw/version-0.2.0/src/fbc_curation/resources/examples/models/e_coli_core.omex</code>',
-                        sanitize=False)
-                ui.button('Use example',
-                          on_click=lambda: url_input.set_value("https://github.com/matthiaskoenig/fbc_curation/raw/version-0.2.0/src/fbc_curation/resources/examples/models/e_coli_core.omex"))
-
+                # ui.html('<h2>Examples</h2>', sanitize=False)
+                # ui.button(icon='add_link',
+                #           on_click=lambda: url_input.set_value(
+                #               "https://github.com/matthiaskoenig/fbc_curation/raw/version-0.2.0/src/fbc_curation/resources/examples/models/e_coli_core.omex"))
+                # ui.html('<code>https://github.com/matthiaskoenig/fbc_curation/raw/version-0.2.0/src/fbc_curation/resources/examples/models/e_coli_core.omex</code>',
+                #         sanitize=False)
+        ui.button(
+            text='FROG report',
+            icon='article',
+            on_click=lambda: ui.notify(f'Create report for {url_input.value}')
+        )
 
     with ui.footer().style('background-color: #3874c8'):
         ui.label('FOOTER')
@@ -110,12 +111,14 @@ def dark_page():
     ui.label('Welcome to the dark side')
 
 
-async def handle_upload(e: events.UploadEventArguments):
+async def handle_file_upload(e: events.UploadEventArguments):
     ui.notify(f'Uploaded {e.file.name}')
-    markdown.content = e.file.name
+    # markdown.content = e.file.name
 
     file: ui.upload.FileUpload = e.file
     await file.read()
+
+
 
     console.print("Uploaded " + e.file.name)
 
@@ -136,4 +139,20 @@ async def handle_upload(e: events.UploadEventArguments):
     #     ui.label('label 2')
     #     ui.label('label 3')
 
-ui.run()
+# ui.run_with(
+#     title="RunFrog",
+#     app=api,
+# )
+
+ui.run(
+    title="RunFrog",
+    fastapi_docs=True,
+    native=False,
+)
+
+# native mode:
+# see: https://github.com/zauberzeug/nicegui/issues/1841
+# sudo apt install gobject-introspection libgirepository-1.0-dev
+
+
+

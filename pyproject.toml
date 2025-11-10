@@ -42,6 +42,11 @@ dependencies = [
     "nicegui>=0.3.2",
     "orjson",
     "celery",
+
+    # native
+    "pywebview",
+    "pywebview[qt]",
+    "PyGObject==3.50.0",
 ]
 
 [project_urls]
