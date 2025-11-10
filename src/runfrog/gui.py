@@ -45,14 +45,14 @@ def homepage():
         ui.button(icon='menu').props('flat color=white')
 
     with ui.row().classes('w-full'):
-        ui.html(
-            'Upload an <strong>SBML file</strong> or <strong>COMBINE archive</strong> (OMEX), or enter a URL.',
-            sanitize=False
-        )
+        # ui.html(
+        #     'Upload an <strong>SBML file</strong> or <strong>COMBINE archive</strong> (OMEX), or enter a URL.',
+        #     sanitize=False
+        # )
 
         with ui.tabs().classes('w-full') as tabs:
-            ui.tab('file', label='Upload File', icon='file_upload')
-            ui.tab('url', label='Submit URL', icon='link')
+            ui.tab('file', label='Upload File', icon='file_upload').tooltip('Upload an SBML file or COMBINE archive (OMEX).')
+            ui.tab('url', label='Submit URL', icon='link').tooltip('Provide URL to an SBML file or COMBINE archive (OMEX).')
 
         with ui.tab_panels(tabs, value='url').classes('w-full'):
             with ui.tab_panel('file'):
@@ -158,7 +158,7 @@ ui.run(
 
 # native mode:
 # see: https://github.com/zauberzeug/nicegui/issues/1841
-# sudo apt install gobject-introspection libgirepository-1.0-dev
+# sudo apt install gobject-introspection libgirepository-1.0-dev libcairo2-dev
 
 
 
