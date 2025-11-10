@@ -10,6 +10,9 @@ https://fonts.google.com/icons
 """
 # Some fixes for native mode: github.com/zauberzeug/nicegui/issues/1841
 import multiprocessing
+
+from runfrog.worker import frog_from_bytes
+
 multiprocessing.set_start_method("spawn", force=True)
 
 from nicegui import ui, events
@@ -116,7 +119,10 @@ async def handle_file_upload(e: events.UploadEventArguments):
     # markdown.content = e.file.name
 
     file: ui.upload.FileUpload = e.file
-    await file.read()
+    content: bytes = await file.read()
+
+    # start celery task
+    frog_from_bytes(content=content)
 
 
 

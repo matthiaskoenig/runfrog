@@ -171,12 +171,6 @@ async def get_combine_archive_for_task(task_id: str) -> FileResponse:
         path=omex_path, media_type="application/zip", filename=omex_path.name
     )
 
-from nicegui import ui
-
-@ui.page('/show')
-def show():
-    # Your UI code goes here
-    ui.label('Hello, FastAPI!')
 
 
 if __name__ == "__main__":
