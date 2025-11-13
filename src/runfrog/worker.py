@@ -5,17 +5,20 @@ import tempfile
 import traceback
 from typing import Any, Optional
 from celery import Celery
+from pymetadata.log import get_logger
 
 from fbc_curation.worker import frog_task
+
+logger = get_logger(__name__)
 
 celery = Celery(__name__)
 celery.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 celery.conf.result_backend = os.environ.get(
     "CELERY_RESULT_BACKEND", "redis://localhost:6379"
 )
-
 # storage of data on server, only relevant for server
 FROG_STORAGE = "/frog_data"
+
 
 # celery example: https://github.com/generomuga/nicegui-celery/blob/main/app.py
 

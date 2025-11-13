@@ -1,0 +1,78 @@
+# -----------------------------------------------------------------------------
+# DOCKER COMPOSE DEVELOPMENT
+# -----------------------------------------------------------------------------
+#
+# build containers
+#   docker compose -f docker-compose-develop.yml build --no-cache
+#   docker compose -f docker-compose-develop.yml build
+# serve containers
+#   docker compose -f docker-compose-develop.yml up --detach
+#   docker compose -f docker-compose-develop.yml up --build
+# -----------------------------------------------------------------------------
+volumes:
+  frog_data:
+    driver: local
+
+services:
+
+  redis:
+    restart: always
+    container_name: frog_redis
+    image: redis:8.2
+    ports:
+      - "6379:6379"
+
+  worker:
+    container_name: frog_worker
+    build:
+      context: .
+      dockerfile: Dockerfile_celery
+    command: celery --app=src.runfrog.worker.celery worker --loglevel=info
+    restart: always
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ./src/runfrog/:/usr/src/app
+      - ./frog_data:/frog_data
+
+  flower:
+    restart: always
+    container_name: frog_flower
+    build:
+      context: .
+      dockerfile: Dockerfile_celery
+    command: celery --app=src.runfrog.worker.celery --broker=redis://redis:6379/0 flower --port=5555 --url_prefix=flower
+    expose:
+      - 5556
+    ports:
+      - 5556:5555
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - worker
+
+  gui:
+    container_name: frog_nicegui
+    build:
+      context: .
+      dockerfile: Dockerfile_nicegui
+    restart: always
+    volumes:
+      - ./frog_data:/frog_data
+      # - .:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - PUID=1000 # change this to your user id
+      - PGID=1000 # change this to your group id
+    expose:
+      - "1556"
+#    depends_on:
+#      - redis
+#      - worker
+#      - flower

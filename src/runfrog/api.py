@@ -172,7 +172,6 @@ async def get_combine_archive_for_task(task_id: str) -> FileResponse:
     )
 
 
-
 if __name__ == "__main__":
     # http://localhost:1555/
     # http://localhost:1555/docs

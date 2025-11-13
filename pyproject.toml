@@ -40,13 +40,15 @@ dependencies = [
     "pydantic>=2.12.4",
     "fastapi>=0.121.1",
     "nicegui>=0.3.2",
-    "orjson",
-    "celery",
+    "orjson>=3.11.4",
+    "celery>=5.5.3",
+    "redis>=7.0.1",
+    "flower>=2.0.1",
 
     # native
-    "pywebview",
-    "pywebview[qt]",
-    "PyGObject==3.50.0",
+#    "pywebview",
+#    "pywebview[qt]",
+#    "PyGObject==3.50.0",
 ]
 
 [project_urls]
