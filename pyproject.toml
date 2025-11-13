@@ -37,7 +37,7 @@ keywords = [
 ]
 dependencies = [
     # "fbc_curation>=0.3.2",
-    "fbc_curation @ git+https://github.com/matthiaskoenig/sbmlutils.git@f08b0eb",
+    "fbc_curation @ git+https://github.com/matthiaskoenig/fbc_curation.git@70cbf4ec3ad979ddb115909b100d16cc4a84be4a",
     "pydantic>=2.12.4",
     "fastapi>=0.121.1",
     "nicegui>=0.3.2",

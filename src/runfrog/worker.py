@@ -3,6 +3,7 @@
 import os
 import tempfile
 import traceback
+from pathlib import Path
 from typing import Any, Optional
 from celery import Celery
 from pymetadata.log import get_logger
@@ -18,24 +19,27 @@ celery.conf.result_backend = os.environ.get(
 )
 # storage of data on server, only relevant for server
 FROG_STORAGE = "/frog_data"
-
-
-# celery example: https://github.com/generomuga/nicegui-celery/blob/main/app.py
+# FIXME: use environment variable from docker-compose
 
 
 @celery.task(name="frog_task")
 def frog_task_celery(
     source_path_str: str,
-    omex_path_str: Optional[str] = None,
-    input_is_temporary: bool = False,
-    frog_storage_path_str: str = FROG_STORAGE,
 ) -> dict[str, Any]:
-    return frog_task(
-        source_path_str=source_path_str,
-        omex_path_str=omex_path_str,
-        input_is_temporary=input_is_temporary,
-        frog_storage_path_str=frog_storage_path_str,
-    )
+
+    task_id = frog_task_celery.request.id
+    omex_path_str = f"{FROG_STORAGE}/FROG_{task_id}.omex"
+
+    try:
+        result = frog_task(
+            source_path_str=source_path_str,
+            omex_path_str=omex_path_str,
+        )
+    finally:
+        # cleanup temporary files for celery
+        os.remove(source_path_str)
+
+    return result
 
 
 def frog_from_bytes(content: bytes) -> dict[str, Any]:
@@ -53,7 +57,9 @@ def frog_from_bytes(content: bytes) -> dict[str, Any]:
         with open(path, "w+b") as f_tmp:
             f_tmp.write(content)
             f_tmp.close()
-        task = frog_task_celery.delay(str(path))
+        task = frog_task_celery.delay(
+            source_path_str = str(path),
+        )
         return {"task_id": task.id}
 
     except Exception as e:

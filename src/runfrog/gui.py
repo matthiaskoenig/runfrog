@@ -19,6 +19,7 @@ def is_valid_url(url: str) -> bool:
 
 @ui.page('/', title='runfrog', favicon="./static/frog.png", dark=False)
 def root():
+
     # -----------------
     # navigation header
     # -----------------
@@ -102,18 +103,19 @@ async def handle_file_upload(e: events.UploadEventArguments):
 
     # start task
     results = frog_from_bytes(content=content)
-    console.print("Uploaded " + e.file.name)
+    console.print(f"Uploaded {e.file.name}")
+    console.print(f"Results: {results}")
 
 
 
 # Mount FastAPI inside nicegui
 from runfrog.api import api
-app.mount("/", api)  # or mount at "/ui" if preferred
+app.mount("/api", api)  # or mount at "/ui" if preferred
 
 
 ui.run(
     title="RunFrog",
-    fastapi_docs=False,
+    fastapi_docs=True,
     native=False,
     port=1555
 )
