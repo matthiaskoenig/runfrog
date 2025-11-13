@@ -17,9 +17,8 @@ def is_valid_url(url: str) -> bool:
     result = urlparse(url)
     return all([result.scheme, result.netloc])
 
-
 @ui.page('/', title='runfrog', favicon="./static/frog.png", dark=False)
-def homepage():
+def root():
     # -----------------
     # navigation header
     # -----------------
@@ -31,8 +30,8 @@ def homepage():
             ui.button('Dashboard', icon='analytics').props('flat color=white')
         with ui.row().classes('sm:hidden'):
             ui.button(icon='home').props('flat color=white')
-            ui.button(icon='api').props('flat color=white')
-            ui.button(icon='dashboard').props('flat color=white')
+            # ui.link(ui.button(icon='api').props('flat color=white'), "/docs")
+            # ui.link(ui.button(icon='dashboard').props('flat color=white'), "/flower")
 
         ui.button(icon='menu').props('flat color=white')
     # -----------------
@@ -42,15 +41,14 @@ def homepage():
         ui.label('FOOTER')
         # Report issue; source code, copyright, webpage
         # By using any part of this service, you agree to the terms of the privacy notice.
-        ui.link('Visit other page', other_page)
-        ui.link('Visit dark page', dark_page)
     # -----------------
 
+    ui.sub_pages({'/': upload, '/tasks': tasks}).classes('w-full')
+
+
+def upload():
+    """GUI for uploading SBML and omex."""
     with ui.row().classes('w-full'):
-        # ui.html(
-        #     'Upload an <strong>SBML file</strong> or <strong>COMBINE archive</strong> (OMEX), or enter a URL.',
-        #     sanitize=False
-        # )
 
         with ui.tabs().classes('w-full') as tabs:
             ui.tab('file', label='Upload File', icon='file_upload').tooltip('Upload an SBML file or COMBINE archive (OMEX).')
@@ -84,16 +82,15 @@ def homepage():
             icon='article',
             on_click=lambda: ui.notify(f'Create report for {url_input.value}')
         )
+        ui.link('Go to tasks', '/tasks')
 
 
+def tasks():
+    """GUI for managing task results."""
+    with ui.row().classes('w-full'):
+        ui.label('Task dashboard')
+        ui.link('Go to main page', '/')
 
-@ui.page('/tasks')
-def other_page():
-    ui.label('Task dashboard')
-
-@ui.page('/task/1234', dark=True)
-def dark_page():
-    ui.label('Task: 1234')
 
 
 async def handle_file_upload(e: events.UploadEventArguments):
@@ -118,6 +115,6 @@ ui.run(
     title="RunFrog",
     fastapi_docs=False,
     native=False,
-    port=1556
+    port=1555
 )
 

@@ -14,17 +14,11 @@ WORKDIR /code
 COPY ./.python-version /code/.python-version
 COPY ./pyproject.toml /code/pyproject.toml
 COPY README.md /code/README.md
-COPY ../src /code/src
+COPY ./src /code/src
 
 # install package
 RUN uv pip install -e .
 
-
-ENV MODULE_NAME="runfrog.api"
-ENV VARIABLE_NAME="api"
-ENV PORT="1556"
-
+# run gui
 EXPOSE 1556
-
-# Run your app
 CMD ["python", "src/runfrog/gui.py"]

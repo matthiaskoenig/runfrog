@@ -36,7 +36,8 @@ keywords = [
 	"fbc",
 ]
 dependencies = [
-    "fbc_curation>=0.3.2",
+    # "fbc_curation>=0.3.2",
+    "fbc_curation @ git+https://github.com/matthiaskoenig/sbmlutils.git@f08b0eb",
     "pydantic>=2.12.4",
     "fastapi>=0.121.1",
     "nicegui>=0.3.2",
@@ -46,9 +47,9 @@ dependencies = [
     "flower>=2.0.1",
 
     # native
-#    "pywebview",
-#    "pywebview[qt]",
-#    "PyGObject==3.50.0",
+    # "pywebview",
+    # "pywebview[qt]",
+    # "PyGObject==3.50.0",
 ]
 
 [project_urls]

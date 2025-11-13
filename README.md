@@ -1,11 +1,15 @@
 # runfrog
 Runfrog website for FROG analysis.
 
-## Installation
+## Development
 
+Start the development server with
+```bash
+docker compose -f docker-compose-develop.yml up --watch
 ```
-uv sync
-```
+Which serves:
+- Nicegui GUI: http://localhost:1556/
+- Celery Flower dashboard: http://localhost:5556/flower/
 
 ## License
 - Source Code: [MIT](https://opensource.org/license/MIT)

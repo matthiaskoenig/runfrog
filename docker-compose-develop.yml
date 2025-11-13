@@ -8,6 +8,10 @@
 # serve containers
 #   docker compose -f docker-compose-develop.yml up --detach
 #   docker compose -f docker-compose-develop.yml up --build
+
+
+# development
+# docker compose -f docker-compose-develop.yml up --watch
 # -----------------------------------------------------------------------------
 volumes:
   frog_data:
@@ -37,6 +41,14 @@ services:
     volumes:
       - ./src/runfrog/:/usr/src/app
       - ./frog_data:/frog_data
+    develop:
+      watch:
+        - action: sync
+          path: ./src/runfrog/worker.py
+          target: /code/src/runfrog/worker.py
+          initial_sync: true
+        - action: rebuild
+          path: pyproject.toml
 
   flower:
     restart: always
@@ -55,6 +67,14 @@ services:
     depends_on:
       - redis
       - worker
+    develop:
+      watch:
+        - action: sync
+          path: ./src/runfrog/worker.py
+          target: /code/src/runfrog/worker.py
+          initial_sync: true
+        - action: rebuild
+          path: pyproject.toml
 
   gui:
     container_name: frog_nicegui
@@ -71,8 +91,18 @@ services:
       - PUID=1000 # change this to your user id
       - PGID=1000 # change this to your group id
     expose:
-      - "1556"
-#    depends_on:
-#      - redis
-#      - worker
-#      - flower
+      - 1556
+    ports:
+      - 1556:1555
+    depends_on:
+      - redis
+      - worker
+      - flower
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /code/src
+          initial_sync: true
+        - action: rebuild
+          path: pyproject.toml

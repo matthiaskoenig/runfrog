@@ -1,2 +1,4 @@
 - [ ] Create working header with pages
 - [ ] Create working footer with pages
+- [ ] Execute task
+- [ ] Display results
