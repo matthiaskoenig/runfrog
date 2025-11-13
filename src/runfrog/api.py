@@ -1,28 +1,26 @@
-"""API for the frogrun web service.
+"""API for the runfrog web service.
 
 This provides basic functionality of running the model
 and returning the JSON representation based on fastAPI.
 """
 
-import tempfile
-import traceback
+
 import typing
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import orjson
 import requests
 import uvicorn
+from starlette.responses import FileResponse, JSONResponse
 from celery.result import AsyncResult
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, FilePath
+
+
 from pymetadata import log
-from starlette.responses import FileResponse, JSONResponse
-
-from fbc_curation import EXAMPLE_DIR, __version__
-from fbc_curation.worker import frog_task
-
+from runfrog.worker import frog_from_bytes
+from fbc_curation import __version__
 
 logger = log.get_logger(__name__)
 
@@ -39,7 +37,7 @@ class ORJSONResponse(JSONResponse):
 
 
 description = """
-## 🐸 FROG webservice
+## FROG webservice
 
 This service provides an API for running FROG analysis.
 
@@ -66,18 +64,19 @@ api: FastAPI = FastAPI(
     },
     openapi_tags=[
         {
+            "name": "core",
+            "description": "API information.",
+        },
+        {
             "name": "frog",
-            "description": "Create FROG report.",
+            "description": "API endpoints to create FROG reports.",
         },
         {
-            "name": "tasks",
+            "name": "task",
             "description": "Task operations, such as querying status and "
-            "retrieving results.",
-        },
-        {
-            "name": "examples",
-            "description": "FROG examples.",
-        },
+            "retrieving results. When a FROG report is requested this is handled via a task scheduler. "
+                           "The results can be retrieved via the `task_id`.",
+        }
     ],
 )
 
@@ -93,50 +92,9 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
-
-@api.get("/api")
-def get_api_information(request: Request) -> Dict[str, Any]:
-    """Get API information."""
-
-    return {
-        "title": api.title,
-        "description": api.description,
-        "contact": api.contact,
-        "root_path": request.scope.get("root_path"),
-    }
-
-
-@api.get("/api/task/status/{task_id}", tags=["tasks"])
-def get_status_for_task(task_id: str) -> JSONResponse:
-    """Get status and results of FROG task with `task_id`."""
-    task_result = AsyncResult(task_id)
-    result = {
-        "task_id": task_id,
-        "task_status": task_result.status,
-        "task_result": task_result.result,
-    }
-    return JSONResponse(result)
-
-
-@api.get("/api/task/omex/{task_id}", tags=["tasks"])
-async def get_combine_archive_for_task(task_id: str) -> FileResponse:
-    """Get COMBINE archive (omex) for FROG task with `task_id`."""
-
-    omex_path = Path("/frog_data") / f"FROG_{task_id}.omex"
-
-    if not omex_path:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No COMBINE archive for task with " f"id '{task_id}'",
-        )
-
-    return FileResponse(
-        path=omex_path, media_type="application/zip", filename=omex_path.name
-    )
-
-
+# --- FROG ---
 @api.post("/api/frog/file", tags=["frog"])
-async def create_frog_from_file(request: Request) -> Dict[str, Any]:
+async def create_frog_from_file(request: Request) -> dict[str, Any]:
     """Upload file and create FROG.
 
     Creates a task for the FROG report.
@@ -149,7 +107,7 @@ async def create_frog_from_file(request: Request) -> Dict[str, Any]:
 
 
 @api.post("/api/frog/content", tags=["frog"])
-async def create_frog_from_content(request: Request) -> Dict[str, Any]:
+async def create_frog_from_content(request: Request) -> dict[str, Any]:
     """Create FROG from file contents.
 
     Creates a task for the FROG report.
@@ -161,7 +119,7 @@ async def create_frog_from_content(request: Request) -> Dict[str, Any]:
 
 
 @api.get("/api/frog/url", tags=["frog"])
-def create_frog_from_url(url: str) -> Dict[str, Any]:
+def create_frog_from_url(url: str) -> dict[str, Any]:
     """Create FROG via URL to SBML or COMBINE archive.
 
     Creates a task for the FROG report.
@@ -172,89 +130,47 @@ def create_frog_from_url(url: str) -> Dict[str, Any]:
     response.raise_for_status()
     return frog_from_bytes(response.content)
 
+# --- CORE ---
+@api.get("/api", tags=["core"])
+def get_api_information(request: Request) -> dict[str, Any]:
+    """Get API information."""
 
-def frog_from_bytes(content: bytes) -> Dict[str, Any]:
-    """Start FROG task for given content.
+    return {
+        "title": api.title,
+        "description": api.description,
+        "contact": api.contact,
+        "root_path": request.scope.get("root_path"),
+    }
 
-    Necessary to serialize the content to a common location
-    accessible for the task queue.
-
-    :returns: `task_id`
-    """
-    try:
-        # persistent temporary file cleaned up by task
-        _, path = tempfile.mkstemp(dir="/frog_data")
-
-        with open(path, "w+b") as f_tmp:
-            f_tmp.write(content)
-            f_tmp.close()
-        task = frog_task.delay(str(path))
-        return {"task_id": task.id}
-
-    except Exception as e:
-        res = {
-            "errors": [
-                f"{e.__str__()}",
-                f"{''.join(traceback.format_exception(None, e, e.__traceback__))}",
-            ],
-        }
-        logger.error(res)
-
-        return res
+# --- TASK ---
+@api.get("/api/task/status/{task_id}", tags=["task"])
+def get_status_for_task(task_id: str) -> JSONResponse:
+    """Get status and results of FROG task with `task_id`."""
+    task_result = AsyncResult(task_id)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result,
+    }
+    return JSONResponse(result)
 
 
-class Example(BaseModel):
-    """Metadata for example model on sbml4humans."""
+@api.get("/api/task/omex/{task_id}", tags=["task"])
+async def get_combine_archive_for_task(task_id: str) -> FileResponse:
+    """Get COMBINE archive (omex) for FROG task with `task_id`."""
 
-    id: str
-    file: FilePath
-    description: Optional[str] = None
+    omex_path = Path("/frog_data") / f"FROG_{task_id}.omex"
 
+    if not omex_path:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No COMBINE archive for task with id '{task_id}'",
+        )
 
-_example_items: Dict[str, Example] = {
-    "e_coli_core_sbml": Example(
-        id="e_coli_core_sbml",
-        file=EXAMPLE_DIR / "models" / "e_coli_core.xml",
-        description="E.coli core model from BiGG database as SBML.",
-    ),
-    "e_coli_core_omex": Example(
-        id="e_coli_core_omex",
-        file=EXAMPLE_DIR / "models" / "e_coli_core.omex",
-        description="E.coli core model from BiGG database as OMEX.",
-    ),
-    "iJR904": Example(
-        id="iJR904",
-        file=EXAMPLE_DIR / "models" / "iJR904.omex",
-        description="iJR904 model from BiGG database as OMEX.",
-    ),
-}
-examples = [example.dict() for example in _example_items.values()]
+    return FileResponse(
+        path=omex_path, media_type="application/zip", filename=omex_path.name
+    )
 
-
-@api.get("/api/examples", tags=["examples"])
-def get_examples() -> Dict[Any, Any]:
-    """Get FROG examples."""
-    return {"examples": examples}
-
-
-@api.get("/api/examples/{example_id}", tags=["examples"])
-def create_frog_for_example(example_id: str) -> Dict[str, Any]:
-    """Get specific FROG example.
-
-    Creates a task for the FROG report.
-
-    :returns: task_id
-    """
-
-    example: Optional[Example] = _example_items.get(example_id, None)
-    if example:
-        source: Path = example.file
-        with open(source, "rb") as f:
-            content: bytes = f.read()
-            return frog_from_bytes(content)
-
-    else:
-        return {"error": f"Example for id '{example_id}' does not exist."}
 
 
 if __name__ == "__main__":
@@ -262,9 +178,10 @@ if __name__ == "__main__":
     # http://localhost:1555/docs
 
     uvicorn.run(
-        "fbc_curation.api:api",
+        "runfrog.api:api",
         host="localhost",
         port=1555,
         log_level="info",
         reload=True,
     )
+

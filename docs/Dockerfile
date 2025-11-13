@@ -19,7 +19,7 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
 # Adds application code to the image
 # COPY . /code
-COPY ./src /code/src
+COPY ../src /code/src
 COPY ./setup.cfg /code/setup.cfg
 COPY ./setup.py /code/setup.py
 COPY ./README.rst /code/README.rst

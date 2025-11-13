@@ -26,8 +26,8 @@ services:
     container_name: frog_frontend
     restart: always
     build:
-      context: runfrog-site
-      dockerfile: Dockerfile-develop
+      context: ../runfrog-site
+      dockerfile: ../runfrog-site/Dockerfile-develop
     ports:
       - "8085:4567"
     volumes:
@@ -38,7 +38,7 @@ services:
   backend:
     container_name: frog_backend
     restart: always
-    build: .
+    build: ..
     volumes:
       - .:/code
       - ./frog_data:/frog_data
@@ -55,7 +55,7 @@ services:
 
   worker:
     container_name: frog_worker
-    build: .
+    build: ..
     command: celery --app=src.fbc_curation.worker.celery worker --loglevel=info
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -75,7 +75,7 @@ services:
   flower:
     restart: always
     container_name: frog_flower
-    build: .
+    build: ..
     command: celery --app=src.fbc_curation.worker.celery --broker=redis://redis:6379/0 flower --port=5555 --url_prefix=flower
     expose:
       - 5556
