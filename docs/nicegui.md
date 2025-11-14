@@ -7,7 +7,13 @@ icons:
 https://fonts.google.com/icons
 
 
-## native model
+## colors
+https://stackoverflow.com/questions/75269412/where-and-how-can-i-define-the-primary-and-secondary-colors
+https://quasar.dev/style/color-palette/
+
+
+
+## native mode
 Some fixes for native mode: github.com/zauberzeug/nicegui/issues/1841
 
 ```python

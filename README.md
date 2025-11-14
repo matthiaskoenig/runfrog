@@ -5,11 +5,18 @@ Runfrog website for FROG analysis.
 
 Start the development server with
 ```bash
-docker compose -f docker-compose-develop.yml up --watch
+export RUNFROG_UID=$(id -u)
+docker compose -f docker-compose-develop.yml up --watch --remove-orphans
 ```
 Which serves:
 - Nicegui GUI: http://localhost:1556/
 - Celery Flower dashboard: http://localhost:5556/flower/
+
+## Deployment
+Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. 
+Being disabled, it can also cause failures without low memory condition.
+Add `vm.overcommit_memory = 1` to `/etc/sysctl.conf` and then reboot or run the command `sysctl vm.overcommit_memory=1`.
+
 
 ## License
 - Source Code: [MIT](https://opensource.org/license/MIT)

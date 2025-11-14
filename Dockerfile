@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 
 # install uv
-COPY --from=ghcr.io/astral-sh/uv:0.8.17 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /bin/uv
 ENV UV_SYSTEM_PYTHON=1
 
 # install git
@@ -18,7 +18,3 @@ COPY ./src /code/src
 
 # install package
 RUN uv pip install -e .
-
-# run gui
-EXPOSE 1556
-CMD ["python", "src/runfrog/gui.py"]

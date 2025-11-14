@@ -26,11 +26,11 @@ services:
     ports:
       - "6379:6379"
 
-  worker:
-    container_name: frog_worker
+  celery:
+    container_name: frog_celery
     build:
       context: .
-      dockerfile: Dockerfile_celery
+      dockerfile: Dockerfile
     command: celery --app=src.runfrog.worker.celery worker --loglevel=info
     restart: always
     environment:
@@ -55,7 +55,7 @@ services:
     container_name: frog_flower
     build:
       context: .
-      dockerfile: Dockerfile_celery
+      dockerfile: Dockerfile
     command: celery --app=src.runfrog.worker.celery --broker=redis://redis:6379/0 flower --port=5555 --url_prefix=flower
     expose:
       - 5556
@@ -66,7 +66,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
-      - worker
+      - celery
     develop:
       watch:
         - action: sync
@@ -80,7 +80,7 @@ services:
     container_name: frog_nicegui
     build:
       context: .
-      dockerfile: Dockerfile_nicegui
+      dockerfile: Dockerfile
     restart: always
     volumes:
       - ./frog_data:/frog_data
@@ -88,15 +88,14 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - PUID=1000 # change this to your user id
-      - PGID=1000 # change this to your group id
+    command: python src/runfrog/gui.py
     expose:
       - 1556
     ports:
       - 1556:1555
     depends_on:
       - redis
-      - worker
+      - celery
       - flower
     develop:
       watch:
