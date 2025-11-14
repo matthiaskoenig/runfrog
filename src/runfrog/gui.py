@@ -42,6 +42,9 @@ def header():
     )
 
     with ui.header().classes('items-center justify-between bg-dark'):
+        ui.image('./static/frog-white-100.png').props('width=50px height=50px').classes('bg-transparent').tooltip(
+            "FROG report")
+
         with ui.row().classes('max-sm:hidden'):
             with ui.link(target="/"):
                 ui.button('Home', icon='home').props('flat color=white')
@@ -56,6 +59,7 @@ def header():
                 ui.button(icon='api').props('flat color=white')
             with ui.link(target='http://localhost:5556/flower/'):
                 ui.button(icon='dashboard').props('flat color=white')
+
 
         # ui.button(icon='menu').props('flat color=white')
 
@@ -75,8 +79,7 @@ def homepage():
     """GUI for uploading SBML and omex."""
     header()
     with ui.row().classes('w-full'):
-        ui.image('./static/frog-100.png').props('width=50px height=50px').classes('bg-transparent')
-        with ui.row():
+        with ui.row().classes('w-full'):
             with ui.tabs() as tabs:
                 ui.tab('file', label='Upload File', icon='file_upload').tooltip('Upload an SBML file or COMBINE archive (OMEX).')
                 ui.tab('url', label='Submit URL', icon='link').tooltip('Provide URL to an SBML file or COMBINE archive (OMEX).')
@@ -94,13 +97,14 @@ def homepage():
 
                 # https://raw.githubusercontent.com/matthiaskoenig/fbc_curation/refs/heads/develop/src/fbc_curation/resources/examples/models/e_coli_core.xml
                 with ui.tab_panel('url'):
+                    ui.html("<strong>URL to SBML or OMEX file<strong>", sanitize=False)
                     url_input = ui.input(
                         label='URL',
                         placeholder='start typing',
                         validation={
                                  'URL must be valid': lambda value: is_valid_url(value)
                              },
-                    ).props('clearable').on('keydown.enter', lambda e: handle_url_upload(e, url_input))
+                    ).props('clearable').on('keydown.enter', lambda e: handle_url_upload(e, url_input)).classes('w-full')
     footer()
 
 @ui.page('/task/{task_id}', title='runfrog', favicon="/static/frog-100.png")

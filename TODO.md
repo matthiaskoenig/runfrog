@@ -1,8 +1,7 @@
 - [x] Create working footer with pages
 
-- [ ] Include logo and favicon
-- [ ] Create working header with pages
-
+- [x] Include logo and favicon
+- [x] Create working header with pages
 - [x] Execute task
 - [ ] Display/Render results
 - [ ] Deploy
