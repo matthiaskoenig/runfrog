@@ -55,7 +55,7 @@ def root():
             with ui.link(target='http://localhost:5556/flower/'):
                 ui.button(icon='dashboard').props('flat color=white')
 
-        ui.button(icon='menu').props('flat color=white')
+        # ui.button(icon='menu').props('flat color=white')
     # -----------------
     # navigation footer
     # -----------------
@@ -67,7 +67,7 @@ def root():
         ''')
     # -----------------
 
-    ui.sub_pages({'/': upload, '/tasks': tasks}).classes('w-full')
+    ui.sub_pages({'/': upload, '/task/{task_id}': task}).classes('w-full')
 
 
 def upload():
@@ -106,13 +106,13 @@ def upload():
         #     on_click=lambda: ui.notify(f'Create report for {url_input.value}')
         # )
     with ui.row().classes('w-full'):
-        ui.link('Go to tasks', '/tasks')
+        ui.link('Go to task: 12345', '/task/12345')
 
 
-def tasks():
+def task(task_id: str):
     """GUI for managing task results."""
     with ui.row().classes('w-full'):
-        ui.label('Task dashboard')
+        ui.label(f'Task paged for {task_id}')
         ui.link('Go to main page', '/')
 
 
@@ -128,6 +128,8 @@ async def handle_file_upload(e: events.UploadEventArguments):
     results = frog_from_bytes(content=content)
     console.print(f"Uploaded {e.file.name}")
     console.print(f"Results: {results}")
+    # TODO: load subpage
+    ui.open('/your/subpage/path')
 
 
 
