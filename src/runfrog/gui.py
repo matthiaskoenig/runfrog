@@ -18,13 +18,15 @@ MultiPartParser.spool_max_size = 1024 * 1024 * 20  # 20 MB
 app.add_static_files('/static', Path(__file__).parent / 'static')
 
 
+
 def is_valid_url(url: str) -> bool:
     """Check if a URL is valid."""
     result = urlparse(url)
     return all([result.scheme, result.netloc])
 
-@ui.page('/', title='runfrog', favicon="/static/frog-100.png", dark=False)
-def root_page():
+
+def header():
+    """Navigation header."""
     # color theme
     ui.colors(
         primary='#4F6EF7',
@@ -39,11 +41,7 @@ def root_page():
         brand='#FF0000'
     )
 
-    # -----------------
-    # navigation header
-    # -----------------
     with ui.header().classes('items-center justify-between bg-dark'):
-
         with ui.row().classes('max-sm:hidden'):
             with ui.link(target="/"):
                 ui.button('Home', icon='home').props('flat color=white')
@@ -60,23 +58,22 @@ def root_page():
                 ui.button(icon='dashboard').props('flat color=white')
 
         # ui.button(icon='menu').props('flat color=white')
-    # -----------------
-    # navigation footer
-    # -----------------
+
+def footer():
+    """Navigation footer."""
     with ui.footer().classes('bg-dark'):  # .style('background-color: #3874c8'):
         ui.markdown('''
         © 2025 [Matthias König](https://livermetabolism.com).
-        By using any part of this service, you agree to the terms of the 
+        By using any part of this service, you agree to the terms of the
         [privacy notice](https://github.com/matthiaskoenig/runfrog/blob/main/docs/privacy_notice.md).
         ''')
-    # -----------------
-
-    ui.sub_pages({'/': upload_subpage, '/task/{task_id}': task_subpage}).classes('w-full')
 
 
-def upload_subpage():
+
+@ui.page('/', title='runfrog', favicon="/static/frog-100.png")
+def homepage():
     """GUI for uploading SBML and omex."""
-
+    header()
     with ui.row().classes('w-full'):
         ui.image('./static/frog-100.png').props('width=50px height=50px').classes('bg-transparent')
         with ui.row():
@@ -103,10 +100,12 @@ def upload_subpage():
                                  'URL must be valid': lambda value: is_valid_url(value)
                              },
                     ).props('clearable').on('keydown.enter', lambda e: handle_url_upload(e, url_input))
+    footer()
 
-
-def task_subpage(task_id: str):
+@ui.page('/task/{task_id}', title='runfrog', favicon="/static/frog-100.png")
+def task_page(task_id: str):
     """GUI for managing task results."""
+    header()
     with ui.row().classes('w-full'):
         ui.html("<h1>FROG Report</h1>", sanitize=False)
         ui.html(f"<h2>{task_id}</h1>", sanitize=False)
@@ -115,24 +114,31 @@ def task_subpage(task_id: str):
         report_url: str = f"/task/{task_id}"
         omex_url: str = f"/api/task/omex/{task_id}"
 
+        progress = ui.linear_progress(0)
+        status_label = ui.label()
 
-        ui.label("This may take a few seconds. Please be patient.")
-        ui.spinner(size='lg')
-        status_label = ui.label("")
-        ui.label(f"Please be patient. Running a complete FROG analysis for large models can take some time. "
-                 f"You can check back later for your results using the url: '{report_url}'") # TODO: url
+        def update():
+            task_result = AsyncResult(task_id)
+            status_label.text = f"{task_result.status}"
+            if task_result.state == 'SUCCESS':
+                progress.value = 100
+
+        ui.timer(0.5, update, active=True)
+
+        # while status != "SUCCESS":
+        #     ui.label(status)
+        #     ui.label("This may take a few seconds. Please be patient.")
+        #     ui.spinner(size='lg')
+        #
+        #     ui.label(f"Please be patient. Running a complete FROG analysis for large models can take some time. "
+        #              f"You can check back later for your results using the url: '{report_url}'") # TODO: url
+        #     ui.navigate.to(f"/task/{task_id}")
+        # else:
+        #     ui.label(status)
+        #     ui.label("Finished report.")
 
         #
-        # # TODO: query results
-        # def update_task_status(task_id: str):
-        #     task_result = AsyncResult(task_id)
-        #     status_label.text = task_result.status
-        #
-        #     # return {
-        #     #     "task_id": task_id,
-        #     #     "task_status": task_result.status,
-        #     #     "task_result": task_result.result,
-        #     # }
+
         #
         #
         # status = None
@@ -144,6 +150,8 @@ def task_subpage(task_id: str):
         # # ui.download()
         # # /api/task/omex/{task_id}
         # # Check if the task has finished
+    footer()
+
 
 
 async def handle_file_upload(e: events.UploadEventArguments):
