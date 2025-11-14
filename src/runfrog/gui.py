@@ -84,6 +84,7 @@ def homepage():
             with ui.tab_panels(tabs, value='file').classes('w-full'):
                 with ui.tab_panel('file'):
                     ui.upload(
+                        label='Upload SBML or OMEX file',
                         on_upload=handle_file_upload,
                         multiple=False,
                         max_files=1,
@@ -112,7 +113,7 @@ def task_page(task_id: str):
 
         status_url: str = f"/api/api/task/status/{task_id}"
         report_url: str = f"/task/{task_id}"
-        omex_url: str = f"/api/task/omex/{task_id}"
+        omex_url: str = f"/api/api/task/omex/{task_id}"
 
         progress = ui.linear_progress(0)
         status_label = ui.label()
@@ -122,6 +123,7 @@ def task_page(task_id: str):
             status_label.text = f"{task_result.status}"
             if task_result.state == 'SUCCESS':
                 progress.value = 100
+            ui.button('Download OMEX', on_click=lambda: ui.download.from_url(omex_url))
 
         ui.timer(0.5, update, active=True)
 
